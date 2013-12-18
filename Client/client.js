@@ -44,6 +44,9 @@ for (var i = 0; i < parts.length; i++) {
       
       
       
+      stars = {}
+      
+      
       
       //KEYMONITOR
       
@@ -110,94 +113,124 @@ for (var i = 0; i < parts.length; i++) {
 }
 
       
-      function screenloc_from_vect(vect){
+      function screenloc_from_vect(vect, ctx){
         var x,y;
         if (vect.direction == 0){
           x = 1;
           y = 0;
+          
+          ctx.textAlign="end";
+          ctx.textBaseline="middle";
+          
         }
         if (vect.direction < 45 && vect.direction > 0){
           x = 1;
           y = Math.tan(toRadians(vect.direction));
+          
+          ctx.textAlign="end";
+          ctx.textBaseline="middle";
         }
         
         if (vect.direction == 45){
           x = 1;
           y = 1;
+          
+          ctx.textAlign="end";
+          ctx.textBaseline="top";
         }   
         if (vect.direction < 90 && vect.direction > 45){
           x = Math.tan(toRadians(90 - vect.direction));
           y = 1;
+          
+          ctx.textAlign="center";
+          ctx.textBaseline="top";
         }     
         
         if (vect.direction == 90){
           x = 0;
           y = 1;
+          
+          ctx.textAlign="center";
+          ctx.textBaseline="top";
         }
         if (vect.direction < 135 && vect.direction > 90){
           x = -Math.tan(toRadians(vect.direction-90));
           y = 1;
+          ctx.textAlign="center";
+          ctx.textBaseline="top";
         }
         
         if (vect.direction == 135){
           x = -1;
           y = 1;
+          ctx.textAlign="left";
+          ctx.textBaseline="top";
         }
         if (vect.direction < 180 && vect.direction > 135){
           x = -1;
           y = Math.tan(toRadians(180-vect.direction));
+          ctx.textAlign="left";
+          ctx.textBaseline="middle";
         }
         if (vect.direction == 180){
           x = -1;
           y = 0;
+          
+          ctx.textAlign="left";
+          ctx.textBaseline="middle";
         }
         if (vect.direction < 225 && vect.direction > 180){
           x = -1;
           y = -Math.tan(toRadians(vect.direction-180));
+          ctx.textAlign="left";
+          ctx.textBaseline="middle";
         }
         
         if (vect.direction == 225){
           x = -1;
           y = -1;
+          ctx.textAlign="left";
+          ctx.textBaseline="bottom";
         }
         if (vect.direction < 270 && vect.direction > 225){
           x = -Math.tan(toRadians(270 - vect.direction));
           y = -1;
+          ctx.textAlign="center";
+          ctx.textBaseline="bottom";
         }
         
         if (vect.direction == 270){
           x = 0;
           y = -1;
+          ctx.textAlign="center";
+          ctx.textBaseline="bottom";
         }
         if (vect.direction < 315 && vect.direction > 270){
           x = Math.tan(toRadians(vect.direction - 270));
           y = -1;
+          ctx.textAlign="center";
+          ctx.textBaseline="bottom";
         }
         
         if (vect.direction == 315){
           x = 1;
           y = -1;
+          ctx.textAlign="right";
+          ctx.textBaseline="bottom";
         }
         if (vect.direction < 360 && vect.direction > 315){
           x = 1;
           y = -Math.tan(toRadians(360 - vect.direction));
+          ctx.textAlign="end";
+          ctx.textBaseline="middle";
         }
         return {"x": x/2 + .5, "y": .5 - y/2}
         
       }
       
-var connection;
-okToStart = false;
-      
-      function setup(){
-       	c=document.getElementById("thecanvas");
-        var div = document.getElementById("container");
-        c.width=div.scrollWidth;
-        c.height=div.scrollHeight;
-       	ctx=c.getContext("2d");
-      	ctx.fillStyle="#FF0000";
-      	
-      	connection = new WebSocket('ws://localhost:8080/', []);
+      var connection;
+      function makeConnection(){
+      connection = new WebSocket('ws://localhost:8080/', []);
 
         // When the connection is open, send some data to the server
         connection.onopen = function () {
@@ -210,8 +243,8 @@ okToStart = false;
             },
             {
             "type":"moveTo",
-            "x": 10,
-            "y": 10,
+            "x": Math.floor(Math.random()*200),
+            "y": Math.floor(Math.random()*200),
             "velocity": new vector(0,0),
             },
           ]
@@ -230,6 +263,25 @@ okToStart = false;
         };
       	
         
+      }
+      
+      function setup(){
+       	c=document.getElementById("thecanvas");
+        var div = document.getElementById("container");
+        c.width=div.scrollWidth;
+        c.height=div.scrollHeight;
+       	ctx=c.getContext("2d");
+      	ctx.fillStyle="#FF0000";
+      	
+      	Settings.username = prompt("What should people call you?");
+      	
+      	stars.stars = [];
+        for(var i = 0; i < 600; i++) {
+          stars.stars.push(new Star(c.width, c.height));
+        }
+      	
+      	makeConnection();
+      	
         //lbuffer = document.createElement('canvas');
         //lbuffer.width = c.width/2;
         //lbuffer.height = c.height;
@@ -303,6 +355,17 @@ okToStart = false;
           cx.lineTo(unit.x-vpx + (Math.cos(vectorFromJSON(unit.velocity).radian())*20),unit.y-vpy + (Math.sin(vectorFromJSON(unit.velocity).radian())*20));
           cx.closePath();
           cx.stroke();
+          
+          cx.fillStyle = "#FFFFFF"
+          cx.font = "8pt Courier";
+          cx.textAlign="center";
+
+          cx.fillText(
+            unit.username,
+            unit.x-vpx,
+            unit.y-(vpy-20)
+            )
+          
         } else if (unit.type == "explosion"){
           cx.strokeStyle=colorFromTriple(unit.side.color).toHEX();
           
@@ -342,7 +405,7 @@ okToStart = false;
           return;
         }
         
-          var coord = screenloc_from_vect(v);
+          var coord = screenloc_from_vect(v, vctx);
           //vctx.fillText(formatforlocdisplay(v.direction, false) , c.width/2, 120);
           vctx.strokeStyle=to.indicatorstyle;
           vctx.beginPath();
@@ -361,6 +424,15 @@ okToStart = false;
           vctx.stroke();
           vctx.closePath();
           
+          vctx.fillStyle = "#FFFFFF"
+          vctx.font = "8pt Courier";
+
+          vctx.fillText(
+            to.username,
+            coord.x * c.width,
+            coord.y * c.height
+            )
+          
          /* vctx.beginPath();
           vctx.moveTo(c.width/2,c.height/2);
           vctx.lineTo(coord.x * c.width,coord.y * c.height);
@@ -374,14 +446,14 @@ okToStart = false;
         if (typeof(p) != "undefined"){
           var vpx = p.x - (c.width / 2);
           var vpy = p.y - (c.height / 2);
-          /*
-          if (typeof p.oldvp == "undefined"){
-            p.oldvp = {"x":p.x,"y":p.y}
+          
+          if (typeof(stars.oldvp) == "undefined"){
+            stars.oldvp = {"x":p.x,"y":p.y}
           }
           
           var delta = {
-            "x": p.oldvp.x - p.x,
-            "y": p.oldvp.y - p.y,
+            "x": stars.oldvp.x - p.x,
+            "y": stars.oldvp.y - p.y,
           }
           
           var bounds = [
@@ -393,9 +465,9 @@ okToStart = false;
               "y":c.height}
           ];
           if (!Settings.disableStars){
-            for(var i in p.stars) {
+            for(var i in stars.stars) {
               
-              var star = p.stars[i];
+              var star = stars.stars[i];
               star.x -= (star.z - 1.5) * delta.x * 2;
               star.y -= (star.z - 1.5) * delta.y * 2;
               
@@ -405,7 +477,7 @@ okToStart = false;
             }
           }
             
-          p.oldvp = {"x":p.x,"y":p.y};*/
+          stars.oldvp = {"x":p.x,"y":p.y};
           
           vctx.fillStyle = "#FFFFFF"
           vctx.font = "10pt Courier";
@@ -422,7 +494,7 @@ okToStart = false;
               renderUnit(unitarray[unitindex], vctx, vpx, vpy)
               
             if (unitarray[unitindex].type == "player" || unitarray[unitindex].type == "spawnpoint" || unitarray[unitindex].type == "cpu"){
-              /*drawindicator(c, vctx, p, unitarray[unitindex]);*/
+              drawindicator(c, vctx, p, unitarray[unitindex]);
             }
               
               /*a = unitarray[unitindex].hitcircle();
@@ -446,8 +518,8 @@ okToStart = false;
           vctx.stroke(); 
           
           vctx.fillText("COOLKEV - GAME", c.width/2, 20);
-          vctx.fillText("PRESS ANY PLAYER ONE KEY TO SPAWN PLAYER ONE", c.width/2, 60);
-          vctx.fillText("PRESS ANY PLAYER TWO KEY TO SPAWN PLAYER TWO", c.width/2, 80);
+          vctx.fillText("MULTIPLAYER", c.width/2, 40);
+          vctx.fillText("CONNECTION LOST/BROKEN/FAILED", c.width/2, 60);
           vctx.fillText("PLAYER ONE", c.width/2, 120);
           vctx.fillText("______________", c.width/2, 122);
           vctx.fillText("Up ---- Accelerate           ", c.width/2, 140);
@@ -456,15 +528,6 @@ okToStart = false;
           vctx.fillText("Right - Turn Clockwise       ", c.width/2, 200);
           vctx.fillText("Space - Fire                 ", c.width/2, 220);
           
-          vctx.fillText("PLAYER TWO", c.width/2, 250);
-          vctx.fillText("______________", c.width/2, 252);
-          vctx.fillText("W ----- Accelerate           ", c.width/2, 270);
-          vctx.fillText("S ----- Deaccellerate        ", c.width/2, 290);
-          vctx.fillText("A ----- Turn CounterClockwise", c.width/2, 310);
-          vctx.fillText("D ----- Turn Clockwise       ", c.width/2, 330);
-          vctx.fillText("Shift - Fire                 ", c.width/2, 350);
-          
-          vctx.fillText("Z ----- Spawn Enemy (Both Players)", c.width/2, 390);
           }
         return c;
       }
