@@ -1,4 +1,8 @@
 
+
+
+
+
       var parts = window.location.search.substr(1).split("&");
 var _GET = {};
 for (var i = 0; i < parts.length; i++) {
@@ -27,20 +31,17 @@ for (var i = 0; i < parts.length; i++) {
       } else {
         Settings.starthealth = 100;
       }
+      if (_GET["username"]){
+        Settings.username = _GET["username"];
+      } else {
+        Settings.username = Math.round(Math.random()*1000);
+      }
       if (_GET["overclock"]){
         Settings.clock = parseInt(_GET["overclock"]);
       } else {
         Settings.clock = 50;
       }
       
-      
-      
-        function addzeropadding(i) {
-              if (i < 10) {
-                  i = "0" + i;
-              }
-              return i;
-          }
       
       
       
@@ -185,19 +186,8 @@ for (var i = 0; i < parts.length; i++) {
         
       }
       
-      
-      function getplayer (create){
-        if (create === undefined){create = true;}
-        if (create){
-          if (playerone === undefined){
-            var playeronenum = unitarray.push(generateplayer(sides.good,spawnpoint.x,spawnpoint.y)) - 1;
-            playerone = unitarray[playeronenum];
-            
-            playerone.deconstruct = function(){playerone = undefined};
-          }
-        }
-        return playerone;
-      }
+var connection;
+okToStart = false;
       
       function setup(){
        	c=document.getElementById("thecanvas");
@@ -206,6 +196,38 @@ for (var i = 0; i < parts.length; i++) {
         c.height=div.scrollHeight;
        	ctx=c.getContext("2d");
       	ctx.fillStyle="#FF0000";
+      	
+      	connection = new WebSocket('ws://localhost:8080/', []);
+
+        // When the connection is open, send some data to the server
+        connection.onopen = function () {
+          connection.send(JSON.stringify(
+          
+          [
+            {
+            "type":"changeUsername",
+            "username": Settings.username
+            },
+            {
+            "type":"moveTo",
+            "x": 10,
+            "y": 10,
+            "velocity": new vector(0,0),
+            },
+          ]
+          
+          ))
+        };
+
+        // Log errors
+        connection.onerror = function (error) {
+          console.log('WebSocket Error ' + error);
+        };
+
+        // Log messages from the server
+        connection.onmessage = function (e) {
+          unitarray = JSON.parse(e.data);
+        };
       	
         
         //lbuffer = document.createElement('canvas');
@@ -223,29 +245,14 @@ for (var i = 0; i < parts.length; i++) {
         } 
       }
       
+      unitarray = [];
       
       function run(){
         c.width -= 1;
         c.width += 1;
         
-        checkcollisions();
-        for (var unitindex in unitarray){
-
-              unitarray[unitindex].calculatelivingness();
-              unitarray[unitindex].tick();
-              if (unitarray[unitindex].dead){
-                Arrayremove(unitarray, unitindex);
-              } else {
-          
-                unitarray[unitindex].x += Math.cos(unitarray[unitindex].velocity.radian())*unitarray[unitindex].velocity.magnitude;
-                unitarray[unitindex].y += Math.sin(unitarray[unitindex].velocity.radian())*unitarray[unitindex].velocity.magnitude;
-              
-              }
-        }
-      
         //rendertocanvas(lbuffer, getplayertwo(false));
-        rendertocanvas(rbuffer, getplayerone(false));
-        
+        rendertocanvas(rbuffer, getUnitByUsername(Settings.username));
         
         ctx.drawImage(rbuffer, 0, 0);
         //ctx.drawImage(lbuffer, c.width/2, 0);
@@ -274,6 +281,58 @@ for (var i = 0; i < parts.length; i++) {
         }
       }
       
+      function getUnitByUsername(u){
+        var i = 0;
+        for (i = 0; i < unitarray.length; i++){
+          if (unitarray[i].username == u){
+            return unitarray[i];
+          }
+        }
+        return undefined;
+      }
+      
+      function renderUnit(unit, cx, vpx, vpy) {
+        if (unit.type == "player"){
+          cx.beginPath();
+          cx.strokeStyle=colorFromTriple(unit.side.color).toHEX();
+          cx.arc(unit.x-vpx,unit.y-vpy,5,0,2*Math.PI);
+          cx.stroke();
+          
+          cx.beginPath();
+          cx.moveTo(unit.x-vpx,unit.y-vpy);
+          cx.lineTo(unit.x-vpx + (Math.cos(vectorFromJSON(unit.velocity).radian())*20),unit.y-vpy + (Math.sin(vectorFromJSON(unit.velocity).radian())*20));
+          cx.closePath();
+          cx.stroke();
+        } else if (unit.type == "explosion"){
+          cx.strokeStyle=colorFromTriple(unit.side.color).toHEX();
+          
+          cx.beginPath();
+          //cx.moveTo(this.x-vpx,this.y-vpy);
+          cx.arc(unit.x-vpx, unit.y-vpy, 1*unit.width, 0 , 2*Math.PI, false);
+          cx.stroke();
+          cx.closePath();
+          
+          cx.beginPath();
+          cx.moveTo(unit.x-vpx,unit.y-vpy);
+          cx.arc(unit.x-vpx, unit.y-vpy, .5*unit.width, 0 , 2*Math.PI, false);
+          cx.stroke();
+          cx.closePath();
+          
+          cx.beginPath();
+          cx.moveTo(unit.x-vpx,unit.y-vpy);
+          cx.arc(unit.x-vpx, unit.y-vpy, .25*unit.width, 0 , 2*Math.PI, false);
+          cx.stroke();
+          cx.closePath();
+        } else if (unit.type == "bullet"){
+          cx.beginPath();
+          cx.strokeStyle=colorFromTriple(unit.side.color).toHEX();
+          cx.moveTo(unit.x-vpx,unit.y-vpy);
+          cx.lineTo(unit.x-vpx + (Math.cos(vectorFromJSON(unit.velocity).radian())*5),unit.y-vpy + (Math.sin(vectorFromJSON(unit.velocity).radian())*5));
+          cx.closePath();
+          cx.stroke();
+        }
+      
+      }
       
       
       function drawindicator(c, vctx, from, to){
@@ -315,7 +374,7 @@ for (var i = 0; i < parts.length; i++) {
         if (typeof(p) != "undefined"){
           var vpx = p.x - (c.width / 2);
           var vpy = p.y - (c.height / 2);
-          
+          /*
           if (typeof p.oldvp == "undefined"){
             p.oldvp = {"x":p.x,"y":p.y}
           }
@@ -346,7 +405,7 @@ for (var i = 0; i < parts.length; i++) {
             }
           }
             
-          p.oldvp = {"x":p.x,"y":p.y};
+          p.oldvp = {"x":p.x,"y":p.y};*/
           
           vctx.fillStyle = "#FFFFFF"
           vctx.font = "10pt Courier";
@@ -360,11 +419,10 @@ for (var i = 0; i < parts.length; i++) {
                           
               /* RENDER */
               
-              
-              unitarray[unitindex].render(vctx,vpx,vpy);
+              renderUnit(unitarray[unitindex], vctx, vpx, vpy)
               
             if (unitarray[unitindex].type == "player" || unitarray[unitindex].type == "spawnpoint" || unitarray[unitindex].type == "cpu"){
-              drawindicator(c, vctx, p, unitarray[unitindex]);
+              /*drawindicator(c, vctx, p, unitarray[unitindex]);*/
             }
               
               /*a = unitarray[unitindex].hitcircle();
@@ -413,28 +471,32 @@ for (var i = 0; i < parts.length; i++) {
       
       keyhandlers = new Array();
       keyhandlers[37] = function (){ //Player1 Left
-        var player = getplayerone();
-        player.velocity.nudge(3);
+        /*var player = getplayerone();
+        player.velocity.nudge(3);*/
+        connection.send('[{"type":"velocityChange","direction":3,"magnitude":0}]');
       }
       keyhandlers[38] = function (){ //Player1 Forward
-        var player = getplayerone();
-        player.velocity.push(.5);
+        /*var player = getplayerone();
+        player.velocity.push(.5);*/
+        connection.send('[{"type":"velocityChange","direction":0,"magnitude":0.5}]');
       }
       keyhandlers[39] = function (){ //Player1 Right
-        var player = getplayerone();
-        player.velocity.nudge(-3);
+        /*var player = getplayerone();
+        player.velocity.nudge(-3);*/
+        connection.send('[{"type":"velocityChange","direction":-3,"magnitude":0}]');
       }
       keyhandlers[40] = function (){ //Player1 Back
-        var player = getplayerone();
-        player.velocity.push(-.5);
+      
+        connection.send('[{"type":"velocityChange","direction":0,"magnitude":-0.5}]');
+        /*
+        player.velocity.push(-.5);*/
       }
       keyhandlers[32] = function (){ //Player1 Fire
-        var player = getplayerone();
-        unitarray.push(generatebullet(player.side,player.x,player.y,player.velocity,50,5));
+        connection.send('[{"type":"spawnBullet"}]');
       }
       keyhandlers[191] = function (){ //Player1 Die
-        var player = getplayerone();
+     /*   var player = getplayerone();
         player.dead = true;
-        playerone = undefined;
+        playerone = undefined;*/
       }
 

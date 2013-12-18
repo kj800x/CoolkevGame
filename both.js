@@ -7,6 +7,10 @@ function color(r, g, b) {
   }
 }
 
+function colorFromTriple(t){
+  return new color(t.r, t.g, t.b);
+}
+
 function atand(x, y) {
   fh = document.vf6;
   if (Math.abs(x) < Math.pow(10, -6)) {
@@ -36,6 +40,15 @@ function norm(v) {
   return v;
 }
 
+      
+        function addzeropadding(i) {
+              if (i < 10) {
+                  i = "0" + i;
+              }
+              return i;
+          }
+      
+
 function toRadians(angle) {
   return angle * (Math.PI / 180);
 }
@@ -53,16 +66,24 @@ function vector(direction, magnitude) {
   this.direction = direction;
   this.magnitude = magnitude;
   this.push = function (sp) {
-    if ((Math.abs(this.magnitude + sp) < 21) || Settings.unlimitedSpeed) {
+    if ((Math.abs(this.magnitude + sp) < 21)) {
       this.magnitude += sp;
+      return this;
     }
   }
   this.nudge = function (d) {
     this.direction = (this.direction + d) % 360;
+    return this;
   }
   this.radian = function () {
     return -1 * (this.direction * (Math.PI / 180))
+    return this;
   }
+}
+
+
+function vectorFromJSON(j){
+  return new vector(j.direction, j.magnitude);
 }
 
 function vector_from_two_points(head, tail) {
