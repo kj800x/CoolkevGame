@@ -108,17 +108,6 @@ for (var i = 0; i < parts.length; i++) {
         };
 }
 
-
-      function color(r,g,b){
-      	this.r = r;
-      	this.g = g;
-      	this.b = b;
-        this.toHEX = function(){
-           return addzeropadding(this.r.toString(16)) + addzeropadding(this.g.toString(16)) + addzeropadding(this.b.toString(16));
-        }
-      }
-      
-      
       
       function screenloc_from_vect(vect){
         var x,y;
