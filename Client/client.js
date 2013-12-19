@@ -268,8 +268,8 @@ for (var i = 0; i < parts.length; i++) {
       function setup(){
        	c=document.getElementById("thecanvas");
         var div = document.getElementById("container");
-        c.width=div.scrollWidth;
-        c.height=div.scrollHeight;
+        c.width=div.clientWidth;
+        c.height=div.clientHeight;
        	ctx=c.getContext("2d");
       	ctx.fillStyle="#FF0000";
       	
@@ -300,7 +300,6 @@ for (var i = 0; i < parts.length; i++) {
       unitarray = [];
       
       function run(){
-        connection.send('[{"type":"heartbeat"}]');
         c.width -= 1;
         c.width += 1;
         
