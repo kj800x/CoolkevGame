@@ -230,7 +230,7 @@ for (var i = 0; i < parts.length; i++) {
       
       var connection;
       function makeConnection(){
-      connection = new WebSocket('ws://localhost:8080/', []);
+      connection = new WebSocket(window.SERVER, []);
 
         // When the connection is open, send some data to the server
         connection.onopen = function () {
@@ -300,6 +300,7 @@ for (var i = 0; i < parts.length; i++) {
       unitarray = [];
       
       function run(){
+        connection.send('[{"type":"heartbeat"}]');
         c.width -= 1;
         c.width += 1;
         
@@ -562,4 +563,9 @@ for (var i = 0; i < parts.length; i++) {
         player.dead = true;
         playerone = undefined;*/
       }
+      
+window.onbeforeunload = function() {
+    connection.onclose = function () {}; // disable onclose handler first
+    connection.close()
+};
 
