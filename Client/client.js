@@ -273,7 +273,7 @@ for (var i = 0; i < parts.length; i++) {
        	ctx=c.getContext("2d");
       	ctx.fillStyle="#FF0000";
       	
-      	Settings.username = prompt("What should people call you?");
+      	Settings.username = prompt("What is your name?");
       	
       	stars.stars = [];
         for(var i = 0; i < 600; i++) {
@@ -520,7 +520,12 @@ for (var i = 0; i < parts.length; i++) {
           
           vctx.fillText("COOLKEV - GAME", c.width/2, 20);
           vctx.fillText("MULTIPLAYER", c.width/2, 40);
-          vctx.fillText("CONNECTION LOST/BROKEN/FAILED", c.width/2, 60);
+          if (connection.readyState == 1){
+            vctx.fillText("You have dies, re-load the page to rejoin.", c.width/2, 60);
+          } 
+          if (connection.readyState == 2 || connection.readyState == 3){
+            vctx.fillText("Connection with the server failed.", c.width/2, 60);
+          } /*
           vctx.fillText("PLAYER ONE", c.width/2, 120);
           vctx.fillText("______________", c.width/2, 122);
           vctx.fillText("Up ---- Accelerate           ", c.width/2, 140);
@@ -528,7 +533,7 @@ for (var i = 0; i < parts.length; i++) {
           vctx.fillText("Left -- Turn CounterClockwise", c.width/2, 180);
           vctx.fillText("Right - Turn Clockwise       ", c.width/2, 200);
           vctx.fillText("Space - Fire                 ", c.width/2, 220);
-          
+          */
           }
         return c;
       }
