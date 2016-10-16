@@ -1,6 +1,8 @@
 CoolkevGame
 ===========
 
+![screenshot](http://i.imgur.com/6hByf0m.png)
+
 This was my first forray into WebSockets. It's still one of my earlier projects and development has stopped on it. There was also a single player fork that I kept working on somewhere, but I seem to have lost the files (oh well, I was less organized three years ago).
 
 I would run a node.js WebSocket server on my server, and people could open the website and play the game.
