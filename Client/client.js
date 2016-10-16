@@ -346,7 +346,7 @@ for (var i = 0; i < parts.length; i++) {
       function renderUnit(unit, cx, vpx, vpy) {
         if (unit.type == "player"){
           cx.beginPath();
-          cx.strokeStyle=colorFromTriple(unit.side.color).toHEX();
+          cx.strokeStyle="#" + colorFromTriple(unit.side.color).toHEX();
           cx.arc(unit.x-vpx,unit.y-vpy,5,0,2*Math.PI);
           cx.stroke();
           
@@ -367,7 +367,7 @@ for (var i = 0; i < parts.length; i++) {
             )
           
         } else if (unit.type == "explosion"){
-          cx.strokeStyle=colorFromTriple(unit.side.color).toHEX();
+          cx.strokeStyle="#" + colorFromTriple(unit.side.color).toHEX();
           
           cx.beginPath();
           //cx.moveTo(this.x-vpx,this.y-vpy);
@@ -388,7 +388,7 @@ for (var i = 0; i < parts.length; i++) {
           cx.closePath();
         } else if (unit.type == "bullet"){
           cx.beginPath();
-          cx.strokeStyle=colorFromTriple(unit.side.color).toHEX();
+          cx.strokeStyle="#" + colorFromTriple(unit.side.color).toHEX();
           cx.moveTo(unit.x-vpx,unit.y-vpy);
           cx.lineTo(unit.x-vpx + (Math.cos(vectorFromJSON(unit.velocity).radian())*5),unit.y-vpy + (Math.sin(vectorFromJSON(unit.velocity).radian())*5));
           cx.closePath();
